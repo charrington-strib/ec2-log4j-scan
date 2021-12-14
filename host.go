@@ -53,6 +53,9 @@ func (h *Host) Usable() bool {
 }
 
 func (h *Host) Close() error {
+	if h.client == nil {
+		return nil
+	}
 	r := h.client.Close()
 	h.client = nil
 	return r
