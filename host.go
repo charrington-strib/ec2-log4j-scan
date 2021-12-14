@@ -88,18 +88,18 @@ func (h *Host) Dial() error {
 	return nil
 }
 
-func (h *Host) Run(cmd string) ([]byte, error) {
+func (h *Host) Run(cmd string) ([]byte, []byte, error) {
 	var err error
 	if h.client == nil {
 		err = h.Dial()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	sesh, err := h.client.NewSession()
 	if err != nil {
 		h.client.Close()
-		return nil, fmt.Errorf("error opening a session with %q: %w", h.client.RemoteAddr(), err)
+		return nil, nil, fmt.Errorf("error opening a session with %q: %w", h.client.RemoteAddr(), err)
 	}
 	defer sesh.Close()
 	var cmdstdout bytes.Buffer
@@ -107,8 +107,5 @@ func (h *Host) Run(cmd string) ([]byte, error) {
 	var cmdstderr bytes.Buffer
 	sesh.Stderr = &cmdstderr
 	err = sesh.Run(cmd)
-	if err != nil {
-		return cmdstderr.Bytes(), err
-	}
-	return cmdstdout.Bytes(), nil
+	return cmdstdout.Bytes(), cmdstderr.Bytes(), err
 }
