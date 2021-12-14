@@ -10,8 +10,7 @@ var matchlog4j = env.GetRegexp("JAVA_LOG4J_DETECT", "(?m:^Log4jReleaseVersion:\\
 
 func (h *Host) DetectVulnerableLog4j2() (bool, error) {
 	stdout, stderr, err := h.Run("/usr/bin/sudo -- find / -xdev -name '*.jar' -exec unzip -a -c {} 'META-INF/MANIFEST.MF' ';'")
-	res := matchjrebin.Match(stdout)
-
+	res := matchlog4j.Match(stdout)
 	if err != nil {
 		if len(stderr) > 0 {
 			return res, fmt.Errorf("detection failed with output %q and error %w", stderr, err)
