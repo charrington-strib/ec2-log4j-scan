@@ -36,6 +36,7 @@ func main() {
 				} else if err != nil {
 					fmt.Fprintf(os.Stderr, "failed to check instance %q: %v\n", h.InstanceID, err)
 				}
+				h.Close()
 			}
 		}()
 	}
