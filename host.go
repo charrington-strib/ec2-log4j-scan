@@ -68,7 +68,7 @@ func (h *Host) Dial() error {
 		h.Username = env.GetString("SSH_DEFAULT_USERNAME", "ubuntu")
 	}
 	if h.Port == "" {
-		h.Port = "22"
+		h.Port = env.GetString("SSH_DEFAULT_PORT", "22")
 	}
 	hp := net.JoinHostPort(h.Hostname, h.Port)
 
