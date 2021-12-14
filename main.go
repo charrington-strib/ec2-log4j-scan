@@ -20,29 +20,22 @@ func main() {
 	for i := 0; i < 20; i++ {
 		wg.Add(1)
 		go func() {
-			var res bool
-			var err error
 			defer wg.Done()
 			for h := range hostch {
 				// first-pass cheap scan of /proc for anything that looks like a java runtime
-				res, err = h.DetectJavaMaybe()
-				if err != nil {
+				runningJava, err := h.DetectJavaMaybe()
+				if runningJava {
+					fmt.Fprintf(os.Stdout, " ** %q/%q -- Detected JVM\n", h.InstanceID, h.Hostname)
+					// second-pass full disk scan for jar files, extracting manifests looking for log4j versions
+					vulnerableLog4j, err := h.DetectVulnerableLog4j2()
+					if vulnerableLog4j {
+						fmt.Fprintf(os.Stdout, " !! %q/%q -- Detected vulnerable log4j\n", h.InstanceID, h.Hostname)
+					} else if err != nil {
+						fmt.Fprintf(os.Stderr, "failed to scan JVM instance %q for vulnerable jar files: %v", h.InstanceID, err)
+					}
+				} else if err != nil {
 					fmt.Fprintf(os.Stderr, "failed to check instance %q: %v\n", h.InstanceID, err)
 				}
-				if !res {
-					continue
-				}
-				fmt.Fprintf(os.Stdout, " * %q/%q -- Detected JVM\n", h.InstanceID, h.Hostname)
-				// second-pass full disk scan for jar files, extracting manifests looking for log4j versions
-				res, err = h.DetectVulnerableLog4j2()
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "failed to scan JVM instance %q for vulnerable jar files: %v", h.InstanceID, err)
-				}
-				if !res {
-					fmt.Fprintf(os.Stdout, " * %q/%q -- no vulnerable log4j detected\n", h.InstanceID, h.Hostname)
-					continue
-				}
-				fmt.Fprintf(os.Stdout, " !! %q/%q -- Detected vulnerable log4j\n", h.InstanceID, h.Hostname)
 			}
 		}()
 	}
